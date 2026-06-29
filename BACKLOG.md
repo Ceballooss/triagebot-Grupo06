@@ -9,7 +9,7 @@
 
 | Iteración | Descripción | Estado |
 |-----------|-------------|--------|
-| [IT-1](#iteración-1) | Modelo de datos y persistencia | PENDIENTE |
+| [IT-1](#iteración-1) | Modelo de datos y persistencia | EN PROGRESO |
 | [IT-2](#iteración-2) | Clasificador LLM | PENDIENTE |
 | [IT-3](#iteración-3) | API REST | PENDIENTE |
 | [IT-4](#iteración-4) | Frontend | PENDIENTE |
