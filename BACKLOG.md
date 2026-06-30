@@ -13,10 +13,10 @@
 | [IT-2](#iteración-2) | Clasificador LLM | COMPLETADA |
 | [IT-3](#iteración-3) | API REST | COMPLETADA |
 | [IT-4](#iteración-4) | Frontend | COMPLETADA |
-| [IT-4.1](#iteración-4) | Frontend · persistencia de filtros en URL | EN PROGRESO |
+| [IT-4.1](#iteración-4) | Frontend · persistencia de filtros en URL | COMPLETADA |
 | [IT-5](#iteración-5) | Calidad y entrega | PENDIENTE |
 
-**Iteración activa:** IT-4.1 — Frontend · persistencia de filtros en URL (rama `feat/iteracion-04.1-filtros-url`)
+**Iteración activa:** — (ninguna EN PROGRESO; siguiente candidata: IT-5)
 
 > Un estado `EN PROGRESO` siempre está respaldado por una rama remota
 > `feat/iteracion-XX` + un Draft PR en `Ceballooss/triagebot-Grupo06`. Esa es la
@@ -109,11 +109,11 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 ### Historia 4.2 — Persistir los filtros del tablero en la URL
 **Iteración:** IT-4.1 | **Depende de:** H4.1 | **Bloqueada por:** H4.1
 
-- [ ] Filtros enrutados a `GET /` (no `/tickets/tablero`): cada select con `hx-get="/"`, `hx-include="#filtros"`, `hx-target="#tablero"`, `hx-select="#tablero"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, `hx-trigger="change"`
-- [ ] `GET /` acepta `category`/`priority`/`status` opcionales: filtra `#tablero` y pasa el dict `filtros` a la plantilla (query solo con params con valor)
-- [ ] `<option selected>` según `filtros` en los tres selects (estado visible tras recarga)
-- [ ] Una sola función de filtrado reutilizada (sin duplicar la consulta); `POST /tickets/crear` intacto
-- [ ] Sin cabeceras de respuesta (no `HX-Push-Url`), sin `localStorage`/`sessionStorage`, sin JS manual
+- [x] Filtros enrutados a `GET /` (no `/tickets/tablero`): cada select con `hx-get="/"`, `hx-include="#filtros"`, `hx-target="#tablero"`, `hx-select="#tablero"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, `hx-trigger="change"`
+- [x] `GET /` acepta `category`/`priority`/`status` opcionales: filtra `#tablero` y pasa el dict `filtros` a la plantilla (query solo con params con valor)
+- [x] `<option selected>` según `filtros` en los tres selects (estado visible tras recarga)
+- [x] Una sola función de filtrado reutilizada (sin duplicar la consulta); `POST /tickets/crear` intacto
+- [x] Sin cabeceras de respuesta (no `HX-Push-Url`), sin `localStorage`/`sessionStorage`, sin JS manual
 
 **Criterio de aceptación:** al filtrar, la URL pasa a `/?...` (nunca a `/tickets/tablero?...`); recargar reproduce tablero filtrado + selects en la opción correcta; atrás/adelante y enlace copiado reproducen el estado; sin cabeceras de respuesta, sin storage, sin JS manual.
 
