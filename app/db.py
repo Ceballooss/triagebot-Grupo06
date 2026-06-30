@@ -35,6 +35,9 @@ def _make_engine(url: str):
 # aislamiento entre tests.
 _engines: dict = {}
 
+# Engines cuyas tablas ya se han creado: evita repetir el DDL en cada petición.
+_initialized: set = set()
+
 
 def get_engine():
     """Devuelve el engine asociado al `DATABASE_URL` vigente (cacheado por URL)."""
@@ -48,14 +51,23 @@ def get_engine():
 
 
 # Atributo de módulo para compatibilidad: refleja la URL vigente al
-# importar/recargar `db` (lo usa `tests/test_models.py`).
+# importar/recargar `db` (lo usa `tests/test_models.py`). Construir el engine no
+# crea el fichero ni las tablas; eso ocurre la primera vez que se usa.
 engine = get_engine()
+
+
+def _ensure_tables(eng) -> None:
+    """Crea las tablas una sola vez por engine (idempotente y sin coste repetido)."""
+
+    if eng not in _initialized:
+        SQLModel.metadata.create_all(eng)
+        _initialized.add(eng)
 
 
 def create_db_and_tables() -> None:
     """Crea todas las tablas declaradas en los modelos SQLModel."""
 
-    SQLModel.metadata.create_all(get_engine())
+    _ensure_tables(get_engine())
 
 
 def get_session() -> Iterator[Session]:
@@ -63,8 +75,8 @@ def get_session() -> Iterator[Session]:
 
     eng = get_engine()
     # El TestClient de la suite de aceptación no usa el context manager, por lo
-    # que los eventos de startup pueden no dispararse: aseguramos las tablas
-    # aquí de forma idempotente.
-    SQLModel.metadata.create_all(eng)
+    # que los eventos de startup pueden no dispararse: aseguramos las tablas la
+    # primera vez que se ve cada engine (no en cada petición).
+    _ensure_tables(eng)
     with Session(eng) as session:
         yield session
