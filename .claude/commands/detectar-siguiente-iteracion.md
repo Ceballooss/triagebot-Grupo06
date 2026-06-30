@@ -1,6 +1,6 @@
 ---
 description: Detecta la siguiente iteración desarrollable del BACKLOG, la fichea (rama + Draft PR) para notificar al equipo, la implementa end-to-end y la marca como completada dejando el PR listo para revisar.
-allowed-tools: Bash(git switch:*), Bash(git pull:*), Bash(git fetch:*), Bash(git branch:*), Bash(git status:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(gh repo set-default:*), Bash(gh pr list:*), Bash(gh pr create:*), Bash(gh pr ready:*), Bash(gh pr view:*), Bash(pytest:*), Bash(ruff:*), Read, Edit, Write
+allowed-tools: Bash(git switch:*), Bash(git pull:*), Bash(git fetch:*), Bash(git branch:*), Bash(git status:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(gh repo set-default:*), Bash(gh pr list:*), Bash(gh pr create:*), Bash(gh pr ready:*), Bash(gh pr view:*), Bash(py:*), Bash(.venv/Scripts/python.exe:*), Bash(pytest:*), Bash(ruff:*), Read, Edit, Write
 ---
 
 # /detectar-siguiente-iteracion
@@ -14,10 +14,40 @@ cogido es el remoto**, no el `BACKLOG.md` local.
 > comandos `gh pr *` deben llevar `-R Ceballooss/triagebot-Grupo06` para que el
 > PR sea interno a TU fork y NUNCA apunte al upstream.
 
+> 🐍 **El entorno virtual es OBLIGATORIO.** TODO comando de Python
+> (`pytest`, `ruff`, `pip`, `uvicorn`, `python -c ...`) se ejecuta a través del
+> intérprete del venv: `.venv/Scripts/python.exe -m <módulo>` (en Windows). El
+> shell del harness **no conserva el `activate` entre llamadas**, así que no
+> basta con activarlo una vez: hay que invocar el python del venv en cada
+> comando. **Nunca** uses el Python global ni instales dependencias fuera del
+> venv. El venv debe ser **Python 3.11–3.13** (3.10 no tiene `datetime.UTC`;
+> 3.14 no puede instalar `pydantic-core 2.10.4` sin compilar con Rust).
+
 Sigue las fases en orden. No te saltes el fichaje: hay que **notificar el inicio
 de desarrollo desde el primer instante**, antes de escribir código de feature.
 
-## Fase 0 — Sincronizar la verdad remota
+## Fase 0 — Activar y verificar el entorno (venv)
+
+**Esto es lo PRIMERO de todo, antes incluso de mirar git.** El entorno debe
+quedar listo o el comando se detiene.
+
+1. Verifica que existe el venv y su versión:
+   `.venv/Scripts/python.exe --version`.
+2. Si **no existe** `.venv`, o su versión **no es 3.11–3.13** → recréalo desde
+   3.12 e instala las dependencias **dentro** del venv:
+   ```bash
+   rm -rf .venv && py -3.12 -m venv .venv
+   .venv/Scripts/python.exe -m pip install --upgrade pip
+   .venv/Scripts/python.exe -m pip install -r requirements.txt
+   ```
+   Si no hay un Python 3.11–3.13 instalado en la máquina, **DETENTE** e indica al
+   usuario que lo instale (p.ej. `winget install --id Python.Python.3.12 -e`).
+3. Confirma que las dependencias están: `.venv/Scripts/python.exe -m pip show ruff pytest fastapi >/dev/null` (si falla, reinstala `requirements.txt` en el venv).
+
+A partir de aquí, **todo** `pytest`/`ruff`/`pip`/`uvicorn`/`python` de este
+comando usa `.venv/Scripts/python.exe -m ...`.
+
+## Fase 0.5 — Sincronizar la verdad remota
 
 1. Comprueba `git status`. Si el working tree está **sucio** o no estás en
    `main` → **DETENTE** e informa al usuario (no fiches encima de trabajo a
@@ -67,7 +97,7 @@ Esto ocurre **antes de escribir una sola línea de código de feature**:
 
 **Lock optimista:** si el `git push` se rechaza (non-fast-forward) o al re-listar
 PRs/ramas aparece que otra persona acaba de fichar esa misma iteración →
-**abandona el fichaje**, vuelve a `main`, re-ejecuta Fase 0–1 y elige otra
+**abandona el fichaje**, vuelve a `main`, re-ejecuta Fase 0.5–1 y elige otra
 iteración. Nunca pises trabajo ajeno.
 
 Confirma al usuario: rama creada + Draft PR abierto (con su URL). El equipo ya
@@ -80,11 +110,15 @@ está notificado.
 2. Implementa código y tests según la lista de tareas. **No modifiques
    `tests/test_acceptance.py`.**
 3. Commits pequeños y frecuentes (Conventional Commits).
-4. Ejecuta `ruff check .` y `pytest -v`. Itera hasta dejarlos en **verde**.
+4. Ejecuta `.venv/Scripts/python.exe -m ruff check .` y
+   `.venv/Scripts/python.exe -m pytest -v`. Itera hasta dejarlos en **verde**.
+   (Si añades una dependencia nueva, instálala en el venv y fíjala en
+   `requirements.txt`.)
 
 ## Fase 5 — Completar y dejar el PR listo
 
-1. Verifica el **criterio de completado** de la iteración (pytest verde, 0 fallos).
+1. Verifica el **criterio de completado** de la iteración con
+   `.venv/Scripts/python.exe -m pytest -v` (verde, 0 fallos).
 2. Edita `BACKLOG.md`: marca las tareas de la historia como `[x]`, pon IT-N →
    **COMPLETADA** en la tabla global y avanza/limpia "Iteración activa".
 3. Edita `iteracion-0N.md`: `## Estado` → `COMPLETADA - <fecha de hoy>`.
