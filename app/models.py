@@ -46,6 +46,11 @@ ALLOWED_CATEGORIES = {c.value for c in Category}
 ALLOWED_PRIORITIES = {p.value for p in Priority}
 ALLOWED_STATUSES = {s.value for s in Status}
 
+# Versión ordenada de los enums (según orden de definición); la usa el
+# clasificador para construir el prompt de forma determinista y reproducible.
+CATEGORY_VALUES = tuple(c.value for c in Category)
+PRIORITY_VALUES = tuple(p.value for p in Priority)
+
 # Límites de los tags (SPEC §3).
 MAX_TAGS = 5
 MAX_TAG_LENGTH = 30

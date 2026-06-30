@@ -11,8 +11,20 @@ from types import SimpleNamespace
 import pytest
 
 from app import classifier
-from app.classifier import FALLBACK_CLASSIFICATION, classify_ticket
-from app.models import ALLOWED_CATEGORIES, ALLOWED_PRIORITIES
+from app.classifier import (
+    FALLBACK_CLASSIFICATION,
+    build_system_prompt,
+    build_user_prompt,
+    classify_ticket,
+)
+from app.models import (
+    ALLOWED_CATEGORIES,
+    ALLOWED_PRIORITIES,
+    MAX_TAG_LENGTH,
+    MAX_TAGS,
+    Category,
+    Priority,
+)
 
 
 def _make_response(content):
@@ -118,3 +130,32 @@ def test_tags_are_sanitized(fake_openai):
     assert len(result["tags"]) <= 5
     assert all(isinstance(t, str) and len(t) <= 30 for t in result["tags"])
     assert result["tags"][0] == "a" * 30  # recortado a MAX_TAG_LENGTH
+
+
+# --- Prompt parametrizado: guard anti-drift entre enums y prompt ---
+
+
+def test_system_prompt_lists_every_category():
+    prompt = build_system_prompt()
+    for category in Category:
+        assert category.value in prompt
+
+
+def test_system_prompt_lists_every_priority():
+    prompt = build_system_prompt()
+    for priority in Priority:
+        assert priority.value in prompt
+
+
+def test_system_prompt_reflects_tag_limits():
+    prompt = build_system_prompt()
+    assert str(MAX_TAGS) in prompt
+    assert str(MAX_TAG_LENGTH) in prompt
+
+
+def test_build_user_prompt_includes_title_and_description():
+    # Formato de entrada del ticket (campos de seed_tickets.json).
+    message = build_user_prompt("La VPN rechaza al equipo", "Sale authentication failed")
+
+    assert "La VPN rechaza al equipo" in message
+    assert "Sale authentication failed" in message

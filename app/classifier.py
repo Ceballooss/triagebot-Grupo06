@@ -16,8 +16,10 @@ from openai import OpenAI
 from app.models import (
     ALLOWED_CATEGORIES,
     ALLOWED_PRIORITIES,
+    CATEGORY_VALUES,
     MAX_TAG_LENGTH,
     MAX_TAGS,
+    PRIORITY_VALUES,
 )
 
 FALLBACK_CLASSIFICATION = {"category": "question", "priority": "P3", "tags": []}
@@ -26,14 +28,49 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 MODEL = "openai/gpt-oss-120b"
 MAX_ATTEMPTS = 2
 
-SYSTEM_PROMPT = (
+# Plantilla parametrizada del system prompt. Los valores de categorías,
+# prioridades y límites de tags NO se escriben a mano: se inyectan desde los
+# enums del modelo (única fuente de verdad) vía `build_system_prompt`, de modo
+# que prompt y validación nunca puedan desincronizarse.
+SYSTEM_PROMPT_TEMPLATE = (
     "Eres un sistema de clasificación de tickets de soporte técnico. Recibirás "
     "el título y la descripción de un ticket. Devuelve EXCLUSIVAMENTE un JSON "
-    "con tres campos: category (uno de: bug, feature_request, question, urgent), "
-    "priority (uno de: P1, P2, P3) y tags (lista de máximo 5 strings cortos en "
-    "minúscula). No devuelvas explicaciones ni markdown. "
-    "P1 = urgente, P2 = importante, P3 = normal."
+    "con tres campos: category (uno de: {categories}), priority (uno de: "
+    "{priorities}) y tags (lista de máximo {max_tags} strings cortos en "
+    "minúscula, cada uno de máximo {max_tag_length} caracteres). No devuelvas "
+    "explicaciones ni markdown. P1 = urgente, P2 = importante, P3 = normal."
 )
+
+
+def build_system_prompt(
+    categories: tuple[str, ...] = CATEGORY_VALUES,
+    priorities: tuple[str, ...] = PRIORITY_VALUES,
+    max_tags: int = MAX_TAGS,
+    max_tag_length: int = MAX_TAG_LENGTH,
+) -> str:
+    """Construye el system prompt a partir de los parámetros del dominio.
+
+    Por defecto deriva de los enums del modelo, garantizando que el prompt
+    siempre liste exactamente las categorías y prioridades válidas.
+    """
+    return SYSTEM_PROMPT_TEMPLATE.format(
+        categories=", ".join(categories),
+        priorities=", ".join(priorities),
+        max_tags=max_tags,
+        max_tag_length=max_tag_length,
+    )
+
+
+def build_user_prompt(title: str, description: str) -> str:
+    """Construye el mensaje de usuario con el formato de entrada del ticket.
+
+    Refleja los campos `title` y `description` de la semilla (`seed_tickets.json`).
+    """
+    return f"Título: {title}\nDescripción: {description}"
+
+
+# Se computa una vez al importar el módulo a partir de los enums del modelo.
+SYSTEM_PROMPT = build_system_prompt()
 
 
 def classify_ticket(title: str, description: str) -> dict:
@@ -65,10 +102,7 @@ def _call_llm(title: str, description: str) -> str | None:
         model=MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"Título: {title}\nDescripción: {description}",
-            },
+            {"role": "user", "content": build_user_prompt(title, description)},
         ],
         temperature=0,
     )
