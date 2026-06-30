@@ -19,7 +19,7 @@
       <h2 class="text-lg font-semibold mb-3">Crear ticket</h2>
       <form hx-post="/tickets/crear"
             hx-target="#tablero"
-            hx-swap="innerHTML"
+            hx-swap="outerHTML"
             hx-on::after-request="if (event.detail.successful) this.reset()"
             class="space-y-3">
         <input type="text" name="title" placeholder="Título" required
@@ -85,7 +85,7 @@
       </form>
     </section>
 
-    <!-- Bloque 3 · Tablero -->
+    <!-- Bloque 3 · Tablero — sin wrapper extra; #tablero lo define _tickets_table.html -->
     <section>
       <h2 class="text-lg font-semibold mb-3">Tablero</h2>
       {% include "_tickets_table.html" %}

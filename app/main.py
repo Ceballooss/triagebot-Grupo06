@@ -8,8 +8,10 @@ nunca devuelve `5xx` por un fallo del LLM (fallback seguro).
 
 from __future__ import annotations
 
+import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Annotated
 
@@ -32,6 +34,12 @@ from app.models import (
 )
 from app.schemas import TicketCreate, TicketPatch
 
+# Lock que serializa las creaciones de tickets para evitar duplicados concurrentes.
+_ticket_lock = threading.Lock()
+
+# Ventana de tiempo para detectar envíos duplicados (segundos).
+_DUPLICATE_WINDOW = 10
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -41,21 +49,42 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="TriageBot", lifespan=lifespan)
 
-# Plantillas Jinja2 (capa HTML/HTMX): el HTML vive en `templates/`, nunca como
-# strings en este módulo (SPEC frontend §2).
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Alias de dependencia: evita llamar a `Depends` en defaults (ruff B008).
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
+# ---------------------------------------------------------------------------
+# Helpers internos
+# ---------------------------------------------------------------------------
+
 def _classify(title: str, description: str) -> dict:
-    """Clasifica con blindaje: un fallo del LLM nunca propaga un `5xx`."""
+    """Clasifica con blindaje total: un fallo del LLM nunca propaga un `5xx`."""
     try:
         return classifier.classify_ticket(title, description)
     except Exception:
         return dict(FALLBACK_CLASSIFICATION)
+
+
+def _classify_html(title: str, description: str) -> tuple[dict, bool]:
+    """Clasifica y señaliza si el LLM falló (para mostrar 'LLM ERROR' en UI)."""
+    try:
+        return classifier.classify_ticket(title, description), False
+    except Exception:
+        return dict(FALLBACK_CLASSIFICATION), True
+
+
+def _es_duplicado(session: Session, title: str, description: str) -> bool:
+    """True si existe un ticket idéntico creado en los últimos _DUPLICATE_WINDOW s."""
+    cutoff = (datetime.now(UTC) - timedelta(seconds=_DUPLICATE_WINDOW)).replace(tzinfo=None)
+    query = (
+        select(Ticket)
+        .where(Ticket.title == title)
+        .where(Ticket.description == description)
+        .where(Ticket.created_at >= cutoff)
+    )
+    return session.exec(query).first() is not None
 
 
 def _filtered_tickets(
@@ -80,6 +109,10 @@ def _filtered_tickets(
     return tickets
 
 
+# ---------------------------------------------------------------------------
+# Endpoints JSON
+# ---------------------------------------------------------------------------
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -88,21 +121,27 @@ def health() -> dict[str, str]:
 @app.post("/tickets", response_model=Ticket, status_code=status.HTTP_201_CREATED)
 def create_ticket(payload: TicketCreate, session: SessionDep) -> Ticket:
     """Valida, clasifica y persiste un ticket. Nunca `5xx` por fallo del LLM."""
-    classification = _classify(payload.title, payload.description)
-    priority = Priority(classification["priority"])
-    now = utcnow()
-    ticket = Ticket(
-        title=payload.title,
-        description=payload.description,
-        category=classification["category"],
-        priority=priority,
-        tags=classification.get("tags", []),
-        fecha_limite=calcular_fecha_limite(priority),
-        fecha_cambio_estado=now,
-    )
-    session.add(ticket)
-    session.commit()
-    session.refresh(ticket)
+    with _ticket_lock:
+        if _es_duplicado(session, payload.title, payload.description):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Ticket duplicado: ya existe uno idéntico enviado recientemente.",
+            )
+        classification = _classify(payload.title, payload.description)
+        priority = Priority(classification["priority"])
+        now = utcnow()
+        ticket = Ticket(
+            title=payload.title,
+            description=payload.description,
+            category=classification["category"],
+            priority=priority,
+            tags=classification.get("tags", []),
+            fecha_limite=calcular_fecha_limite(priority),
+            fecha_cambio_estado=now,
+        )
+        session.add(ticket)
+        session.commit()
+        session.refresh(ticket)
     return ticket
 
 
@@ -118,20 +157,15 @@ def list_tickets(
     return _filtered_tickets(session, category, priority, status, vencidos)
 
 
-# --------------------------------------------------------------------------- #
-# Capa HTML / HTMX (SPEC frontend §5). Cada endpoint devuelve HTML, no JSON.   #
-# Se declaran ANTES de `/tickets/{ticket_id}`: la ruta estática                #
-# `/tickets/tablero` debe casar antes que la paramétrica (si no, FastAPI       #
-# intenta parsear "tablero" como `int` y devuelve `422`).                      #
-# --------------------------------------------------------------------------- #
-
+# ---------------------------------------------------------------------------
+# Capa HTML / HTMX
+# ---------------------------------------------------------------------------
 
 def _render_tablero(
     request: Request,
     tickets: list[Ticket],
     error: str | None = None,
 ) -> HTMLResponse:
-    """Renderiza el parcial reutilizable del tablero."""
     return templates.TemplateResponse(
         request,
         "_tickets_table.html",
@@ -187,7 +221,6 @@ def tablero(
     status: str | None = None,
     vencidos: str | None = None,
 ) -> HTMLResponse:
-    """Fragmento del tablero filtrado (vacío = todos)."""
     tickets = _filtered_tickets(
         session,
         _coerce_enum(Category, category),
@@ -211,29 +244,40 @@ def crear_ticket_html(
     except ValidationError:
         tickets = _filtered_tickets(session, None, None, None)
         return _render_tablero(
-            request,
-            tickets,
-            error="Título y descripción son obligatorios.",
+            request, tickets, error="Título y descripción son obligatorios."
         )
 
-    classification = _classify(payload.title, payload.description)
-    priority = Priority(classification["priority"])
-    now = utcnow()
-    ticket = Ticket(
-        title=payload.title,
-        description=payload.description,
-        category=classification["category"],
-        priority=priority,
-        tags=classification.get("tags", []),
-        fecha_limite=calcular_fecha_limite(priority),
-        fecha_cambio_estado=now,
-    )
-    session.add(ticket)
-    session.commit()
-    session.refresh(ticket)
+    with _ticket_lock:
+        if _es_duplicado(session, payload.title, payload.description):
+            tickets = _filtered_tickets(session, None, None, None)
+            return _render_tablero(
+                request,
+                tickets,
+                error="Ticket duplicado: ya enviaste uno idéntico hace menos de 10 segundos.",
+            )
+
+        classification, llm_error = _classify_html(payload.title, payload.description)
+        priority = Priority(classification["priority"])
+        now = utcnow()
+        ticket = Ticket(
+            title=payload.title,
+            description=payload.description,
+            category=classification["category"],
+            priority=priority,
+            tags=classification.get("tags", []),
+            fecha_limite=calcular_fecha_limite(priority),
+            fecha_cambio_estado=now,
+        )
+        session.add(ticket)
+        session.commit()
+        session.refresh(ticket)
 
     tickets = _filtered_tickets(session, None, None, None)
-    return _render_tablero(request, tickets)
+    return _render_tablero(
+        request,
+        tickets,
+        error="LLM ERROR" if llm_error else None,
+    )
 
 
 @app.post("/tickets/{ticket_id}/transicion", response_class=HTMLResponse)

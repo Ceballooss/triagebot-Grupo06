@@ -9,7 +9,8 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 
-from sqlalchemy import text
+from sqlalchemy import event, text
+from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
 # Importa los modelos para que queden registrados en `SQLModel.metadata`
@@ -21,6 +22,15 @@ DEFAULT_DATABASE_URL = "sqlite:///triagebot.db"
 
 def _database_url() -> str:
     return os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL)
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragmas(dbapi_conn, _record) -> None:
+    """WAL mode + busy timeout para tolerar escrituras concurrentes en SQLite."""
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=5000")
+    cursor.close()
 
 
 def _make_engine(url: str):
