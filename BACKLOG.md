@@ -10,12 +10,12 @@
 | Iteración | Descripción | Estado |
 |-----------|-------------|--------|
 | [IT-1](#iteración-1) | Modelo de datos y persistencia | COMPLETADA |
-| [IT-2](#iteración-2) | Clasificador LLM | PENDIENTE |
+| [IT-2](#iteración-2) | Clasificador LLM | COMPLETADA |
 | [IT-3](#iteración-3) | API REST | PENDIENTE |
 | [IT-4](#iteración-4) | Frontend | PENDIENTE |
 | [IT-5](#iteración-5) | Calidad y entrega | PENDIENTE |
 
-**Iteración activa:** IT-2
+**Iteración activa:** — (ninguna EN PROGRESO; siguiente candidata: IT-3)
 
 > Un estado `EN PROGRESO` siempre está respaldado por una rama remota
 > `feat/iteracion-XX` + un Draft PR en `Ceballooss/triagebot-Grupo06`. Esa es la
@@ -44,10 +44,10 @@
 ### Historia 2.1 — Módulo `app/classifier.py`
 **Iteración:** IT-2 | **Depende de:** H1.1 | **Bloqueada por:** —
 
-- [ ] Expone `classify_ticket(title: str, description: str) -> dict`
-- [ ] Llama a `openai/gpt-oss-120b` vía OpenRouter (`base_url`, key `OPENROUTER_API_KEY`)
-- [ ] Valida salida contra enums; fallback si inválida o si el LLM falla dos veces
-- [ ] No propaga excepciones del SDK
+- [x] Expone `classify_ticket(title: str, description: str) -> dict`
+- [x] Llama a `openai/gpt-oss-120b` vía OpenRouter (`base_url`, key `OPENROUTER_API_KEY`)
+- [x] Valida salida contra enums; fallback si inválida o si el LLM falla dos veces
+- [x] No propaga excepciones del SDK
 
 Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 

@@ -24,10 +24,10 @@ depende de esta: el endpoint `POST /tickets` llama a `classify_ticket`. Es el
 > excepción del clasificador acaba en el fallback, así que es agnóstico al proveedor.
 
 ## Tareas
-- [ ] Implementar `classify_ticket` llamando a OpenRouter (SDK de OpenAI)
-- [ ] Parseo + validación de `category`/`priority`/`tags` contra enums
-- [ ] Reintento (1) + fallback ante error o salida inválida
-- [ ] Tests: salida válida mockeada, salida inválida → fallback, excepción → fallback
+- [x] Implementar `classify_ticket` llamando a OpenRouter (SDK de OpenAI)
+- [x] Parseo + validación de `category`/`priority`/`tags` contra enums
+- [x] Reintento (1) + fallback ante error o salida inválida
+- [x] Tests: salida válida mockeada, salida inválida → fallback, excepción → fallback
 
 ## Ficheros afectados
 - `app/classifier.py`
@@ -37,5 +37,12 @@ depende de esta: el endpoint `POST /tickets` llama a `classify_ticket`. Es el
 `pytest` pasa: `test_classifier_failure_uses_safe_fallback` verde y el clasificador
 devuelve un dict con las tres claves válidas con LLM mockeado. 0 fallos.
 
+> **Nota de alcance:** el módulo `app/classifier.py` y sus tests unitarios
+> (`tests/test_classifier.py`) quedan en verde (6/6), incluyendo el contrato con
+> LLM mockeado. El test de aceptación `test_classifier_failure_uses_safe_fallback`
+> hace `POST /tickets`, endpoint que pertenece a **IT-3 (API REST)** y aún no
+> existe (devuelve `404`); pasará a verde al integrar IT-3, que es justo la
+> dependencia documentada (IT-3 llama a `classify_ticket`). `ruff check .` limpio.
+
 ## Estado
-PENDIENTE
+COMPLETADA - 2026-06-30
