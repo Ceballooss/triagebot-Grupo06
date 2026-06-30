@@ -16,7 +16,7 @@
 | [IT-4.1](#iteración-4) | Frontend · persistencia de filtros en URL | COMPLETADA |
 | [IT-5](#iteración-5) | Nuevas funcionalidades (plazos + ciclo de vida) | COMPLETADA |
 | [IT-6](#iteración-6) | Calidad y entrega | PENDIENTE |
-| [IT-7](#iteración-7) | Estadísticas (GET /tickets/stats) | PENDIENTE |
+| [IT-7](#iteración-7) | Estadísticas (GET /tickets/stats) | COMPLETADA |
 
 **Iteración activa:** IT-5 (feat/iteracion-05 · PR #16)
 
@@ -186,9 +186,9 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 ### Historia 7.1 — Endpoint GET /tickets/stats
 **Iteración:** IT-7 | **Depende de:** H5.3 (enum Status completo) | **Bloqueada por:** IT-5
 
-- [ ] `GET /tickets/stats` en `app/main.py` (declarado antes de `GET /tickets/{id}`)
-- [ ] JSON: `total`, `by_category`, `by_priority`, `by_status`
-- [ ] Conteos inicializados a 0 para todos los valores de enum (sin KeyError con BD vacía)
+- [x] `GET /tickets/stats` en `app/main.py` (declarado antes de `GET /tickets/{id}`)
+- [x] JSON: `total`, `by_category`, `by_priority`, `by_status`
+- [x] Conteos inicializados a 0 para todos los valores de enum (sin KeyError con BD vacía)
 
 **Criterio de aceptación:** `GET /tickets/stats` → 200 JSON con las cuatro claves; `ruff` limpio; tests en verde.
 

@@ -55,4 +55,4 @@ respuesta siempre incluye todas las claves aunque estén vacías.
 cuando no hay tickets; `ruff check .` limpio; suite de tests en verde.
 
 ## Estado
-PENDIENTE
+COMPLETADA - 2026-06-30
