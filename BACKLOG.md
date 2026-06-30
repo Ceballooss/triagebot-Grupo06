@@ -12,10 +12,10 @@
 | [IT-1](#iteración-1) | Modelo de datos y persistencia | COMPLETADA |
 | [IT-2](#iteración-2) | Clasificador LLM | COMPLETADA |
 | [IT-3](#iteración-3) | API REST | COMPLETADA |
-| [IT-4](#iteración-4) | Frontend | PENDIENTE |
+| [IT-4](#iteración-4) | Frontend | EN PROGRESO |
 | [IT-5](#iteración-5) | Calidad y entrega | PENDIENTE |
 
-**Iteración activa:** — (ninguna EN PROGRESO; siguiente candidata: IT-4)
+**Iteración activa:** IT-4 — Frontend (rama `feat/iteracion-04-frontend`)
 
 > Un estado `EN PROGRESO` siempre está respaldado por una rama remota
 > `feat/iteracion-XX` + un Draft PR en `Ceballooss/triagebot-Grupo06`. Esa es la
@@ -96,12 +96,14 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 ### Historia 4.1 — Tablero (`GET /`)
 **Iteración:** IT-4 | **Depende de:** H3.1, H3.2 | **Bloqueada por:** H3.1, H3.2
 
-- [ ] Template Jinja2: formulario (`title`, `description`) + botón "Crear ticket"
-- [ ] HTMX: `POST /tickets` refresca la lista sin recargar
+- [ ] `GET /` con `Jinja2Templates`: página única con form (`title`, `description`) + botón "Crear ticket"
+- [ ] Capa HTML separada de la JSON: `GET /tickets/tablero` (fragmento filtrado) y `POST /tickets/crear` (crea + devuelve tablero) devuelven HTML; `POST /tickets` y `GET /tickets` siguen siendo JSON
+- [ ] HTMX refresca `#tablero` (`hx-swap="innerHTML"`) sin recargar; form se resetea tras éxito
 - [ ] Tabla: `id`, `title`, `category` (badge color), `priority` (badge), `tags`, `status`, `created_at`
-- [ ] Tres selects de filtro: `category`, `priority`, `status`
+- [ ] Tres selects de filtro combinables: `category`, `priority` (`P1/P2/P3`), `status` (`open/in_progress/closed`)
+- [ ] Estado vacío "No hay tickets que coincidan"; fallo del backend/IA no rompe la página
 
-**Criterio de aceptación:** crear ticket desde navegador → aparece en tablero sin recarga de página.
+**Criterio de aceptación:** crear ticket desde navegador → aparece en tablero sin recarga de página; filtros combinables sin recarga.
 
 ---
 
