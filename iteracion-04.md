@@ -194,17 +194,17 @@ templates/
 
 ## Tareas
 
-- [ ] Montar `Jinja2Templates(directory="templates")` y ruta `GET /` que renderiza
+- [x] Montar `Jinja2Templates(directory="templates")` y ruta `GET /` que renderiza
       `index.html` (devuelve HTML, no JSON)
-- [ ] `GET /tickets/tablero` → fragmento `_tickets_table.html` filtrado por
+- [x] `GET /tickets/tablero` → fragmento `_tickets_table.html` filtrado por
       `category`/`priority`/`status` (vacío = todos), reutilizando la lógica de
       filtrado existente
-- [ ] `POST /tickets/crear` → crea+clasifica+persiste (misma lógica que
+- [x] `POST /tickets/crear` → crea+clasifica+persiste (misma lógica que
       `POST /tickets`) y devuelve el tablero refrescado; error de validación →
       fragmento con mensaje, sin romper la página
-- [ ] `templates/index.html`: tres bloques (form HTMX + filtros `#filtros` +
+- [x] `templates/index.html`: tres bloques (form HTMX + filtros `#filtros` +
       contenedor `#tablero` que incluye el parcial)
-- [ ] `templates/_tickets_table.html`: filas con `id`, `title`, `category` (color),
+- [x] `templates/_tickets_table.html`: filas con `id`, `title`, `category` (color),
       `priority` (badge), `tags` (chips), `status` (badge), `created_at` formateado,
       + estado vacío "No hay tickets que coincidan"
 
@@ -219,21 +219,21 @@ templates/
 
 `pytest` sigue verde y se cumplen los criterios de aceptación del frontend:
 
-- [ ] `GET /` devuelve una página con los tres bloques.
-- [ ] Crear un ticket desde el formulario lo añade al tablero **sin recargar**.
-- [ ] El formulario se resetea tras una creación correcta.
-- [ ] Cambiar cualquier filtro actualiza el tablero **sin recargar**.
-- [ ] Los filtros se combinan (categoría + prioridad + estado simultáneos).
-- [ ] Cada fila muestra: id · title · category (color) · priority (badge) · tags ·
+- [x] `GET /` devuelve una página con los tres bloques.
+- [x] Crear un ticket desde el formulario lo añade al tablero **sin recargar**.
+- [x] El formulario se resetea tras una creación correcta.
+- [x] Cambiar cualquier filtro actualiza el tablero **sin recargar**.
+- [x] Los filtros se combinan (categoría + prioridad + estado simultáneos).
+- [x] Cada fila muestra: id · title · category (color) · priority (badge) · tags ·
       status · created_at.
-- [ ] Estado vacío visible cuando no hay coincidencias.
-- [ ] Un fallo del backend/IA no rompe la página (fallback seguro, sin pantalla
+- [x] Estado vacío visible cuando no hay coincidencias.
+- [x] Un fallo del backend/IA no rompe la página (fallback seguro, sin pantalla
       en blanco).
-- [ ] El HTML vive en `templates/`, no como strings en `main.py`.
+- [x] El HTML vive en `templates/`, no como strings en `main.py`.
 
 Verificación manual: `py -3.12 -m uvicorn app.main:app --reload`, crear un ticket
 desde el navegador y verlo aparecer en el tablero sin recargar.
 
 ## Estado
 
-EN PROGRESO
+COMPLETADA - 2026-06-30
