@@ -13,8 +13,8 @@
 | [IT-2](#iteración-2) | Clasificador LLM | COMPLETADA |
 | [IT-3](#iteración-3) | API REST | COMPLETADA |
 | [IT-4](#iteración-4) | Frontend | PENDIENTE |
+| [IT-4.1](#iteración-4) | Frontend · persistencia de filtros en URL | PENDIENTE |
 | [IT-5](#iteración-5) | Calidad y entrega | PENDIENTE |
-| [IT-6](#iteración-6) | Persistencia de filtros en URL | PENDIENTE |
 
 **Iteración activa:** — (ninguna EN PROGRESO; siguiente candidata: IT-4)
 
@@ -104,6 +104,17 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 
 **Criterio de aceptación:** crear ticket desde navegador → aparece en tablero sin recarga de página.
 
+### Historia 4.2 — Persistir los filtros del tablero en la URL
+**Iteración:** IT-4.1 | **Depende de:** H4.1 | **Bloqueada por:** H4.1
+
+- [ ] Filtros enrutados a `GET /` (no `/tickets/tablero`): cada select con `hx-get="/"`, `hx-include="#filtros"`, `hx-target="#tablero"`, `hx-select="#tablero"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, `hx-trigger="change"`
+- [ ] `GET /` acepta `category`/`priority`/`status` opcionales: filtra `#tablero` y pasa el dict `filtros` a la plantilla (query solo con params con valor)
+- [ ] `<option selected>` según `filtros` en los tres selects (estado visible tras recarga)
+- [ ] Una sola función de filtrado reutilizada (sin duplicar la consulta); `POST /tickets/crear` intacto
+- [ ] Sin cabeceras de respuesta (no `HX-Push-Url`), sin `localStorage`/`sessionStorage`, sin JS manual
+
+**Criterio de aceptación:** al filtrar, la URL pasa a `/?...` (nunca a `/tickets/tablero?...`); recargar reproduce tablero filtrado + selects en la opción correcta; atrás/adelante y enlace copiado reproducen el estado; sin cabeceras de respuesta, sin storage, sin JS manual.
+
 ---
 
 ## Épica 5 — Calidad y entrega
@@ -128,21 +139,6 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 
 ---
 
-## Épica 6 — Persistencia de filtros en URL
-
-### Historia 6.1 — Filtros del tablero persistidos en la URL
-**Iteración:** IT-6 | **Depende de:** H4.1 | **Bloqueada por:** H4.1
-
-- [ ] Filtros enrutados a `GET /` (no `/tickets/tablero`): cada select con `hx-get="/"`, `hx-include="#filtros"`, `hx-target="#tablero"`, `hx-select="#tablero"`, `hx-swap="outerHTML"`, `hx-push-url="true"`, `hx-trigger="change"`
-- [ ] `GET /` acepta `category`/`priority`/`status` opcionales: filtra `#tablero` y pasa el dict `filtros` a la plantilla (query solo con params con valor)
-- [ ] `<option selected>` según `filtros` en los tres selects (estado visible tras recarga)
-- [ ] Una sola función de filtrado reutilizada (sin duplicar la consulta); `POST /tickets/crear` intacto
-- [ ] Sin cabeceras de respuesta (no `HX-Push-Url`), sin `localStorage`/`sessionStorage`, sin JS manual
-
-**Criterio de aceptación:** al filtrar, la URL pasa a `/?...` (nunca a `/tickets/tablero?...`); recargar reproduce tablero filtrado + selects en la opción correcta; atrás/adelante y enlace copiado reproducen el estado; sin cabeceras de respuesta, sin storage, sin JS manual.
-
----
-
 ## Dependencias entre iteraciones
 
 ```
@@ -150,6 +146,6 @@ IT-1 (modelos)
   └── IT-2 (clasificador)
         └── IT-3 (API REST)  ←── también depende de IT-1
               └── IT-4 (frontend)
-                    ├── IT-5 (calidad y entrega)
-                    └── IT-6 (persistencia de filtros en URL)
+                    └── IT-4.1 (persistencia de filtros en URL)
+                          └── IT-5 (calidad y entrega)
 ```

@@ -1,4 +1,8 @@
-# Iteración 6 - Persistencia de los filtros del tablero en la URL
+# Iteración 4.1 - Persistencia de los filtros del tablero en la URL
+
+> Sub-iteración del **frontend (Iteración 4)** y **la siguiente a realizar**:
+> completa el tablero de IT-4 haciendo que el estado de los filtros sobreviva a
+> recargas y enlaces. Depende de IT-4.
 
 ## Objetivo
 
@@ -17,7 +21,8 @@ es el contenedor del tablero.
 Hoy (tras la Iteración 4) los selects hacen `hx-get="/tickets/tablero"` y el
 estado del filtro **solo vive en el DOM** tras el swap: al recargar la página se
 pierde (el navegador vuelve a `/` sin query, los selects vuelven a "Todos" y el
-tablero sale sin filtrar). Depende de la Iteración 4 (frontend ya implementado).
+tablero sale sin filtrar). Es la continuación natural de la Iteración 4 (frontend
+ya implementado), de la que depende.
 
 ## Restricciones duras
 
