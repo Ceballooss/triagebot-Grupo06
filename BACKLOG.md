@@ -16,7 +16,7 @@
 | [IT-4.1](#iteración-4) | Frontend · persistencia de filtros en URL | PENDIENTE |
 | [IT-5](#iteración-5) | Calidad y entrega | PENDIENTE |
 
-**Iteración activa:** — (ninguna EN PROGRESO; siguiente candidata: IT-4)
+**Iteración activa:** — (ninguna EN PROGRESO; siguiente candidata: IT-5)
 
 > Un estado `EN PROGRESO` siempre está respaldado por una rama remota
 > `feat/iteracion-XX` + un Draft PR en `Ceballooss/triagebot-Grupo06`. Esa es la
@@ -97,12 +97,14 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 ### Historia 4.1 — Tablero (`GET /`)
 **Iteración:** IT-4 | **Depende de:** H3.1, H3.2 | **Bloqueada por:** H3.1, H3.2
 
-- [ ] Template Jinja2: formulario (`title`, `description`) + botón "Crear ticket"
-- [ ] HTMX: `POST /tickets` refresca la lista sin recargar
-- [ ] Tabla: `id`, `title`, `category` (badge color), `priority` (badge), `tags`, `status`, `created_at`
-- [ ] Tres selects de filtro: `category`, `priority`, `status`
+- [x] `GET /` con `Jinja2Templates`: página única con form (`title`, `description`) + botón "Crear ticket"
+- [x] Capa HTML separada de la JSON: `GET /tickets/tablero` (fragmento filtrado) y `POST /tickets/crear` (crea + devuelve tablero) devuelven HTML; `POST /tickets` y `GET /tickets` siguen siendo JSON
+- [x] HTMX refresca `#tablero` (`hx-swap="innerHTML"`) sin recargar; form se resetea tras éxito
+- [x] Tabla: `id`, `title`, `category` (badge color), `priority` (badge), `tags`, `status`, `created_at`
+- [x] Tres selects de filtro combinables: `category`, `priority` (`P1/P2/P3`), `status` (`open/in_progress/closed`)
+- [x] Estado vacío "No hay tickets que coincidan"; fallo del backend/IA no rompe la página
 
-**Criterio de aceptación:** crear ticket desde navegador → aparece en tablero sin recarga de página.
+**Criterio de aceptación:** crear ticket desde navegador → aparece en tablero sin recarga de página; filtros combinables sin recarga.
 
 ### Historia 4.2 — Persistir los filtros del tablero en la URL
 **Iteración:** IT-4.1 | **Depende de:** H4.1 | **Bloqueada por:** H4.1
