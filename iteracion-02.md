@@ -38,4 +38,4 @@ depende de esta: el endpoint `POST /tickets` llama a `classify_ticket`. Es el
 devuelve un dict con las tres claves válidas con LLM mockeado. 0 fallos.
 
 ## Estado
-PENDIENTE
+EN PROGRESO
