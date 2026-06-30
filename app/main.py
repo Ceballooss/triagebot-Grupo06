@@ -301,6 +301,25 @@ def transicion_ticket(
     return _render_tablero(request, tickets)
 
 
+@app.get("/tickets/stats")
+def ticket_stats(session: SessionDep) -> dict:
+    """Conteos globales de tickets agrupados por categoría, prioridad y estado."""
+    tickets = list(session.exec(select(Ticket)).all())
+    by_category: dict[str, int] = {c.value: 0 for c in Category}
+    by_priority: dict[str, int] = {p.value: 0 for p in Priority}
+    by_status: dict[str, int] = {s.value: 0 for s in Status}
+    for t in tickets:
+        by_category[t.category.value] += 1
+        by_priority[t.priority.value] += 1
+        by_status[t.status.value] += 1
+    return {
+        "total": len(tickets),
+        "by_category": by_category,
+        "by_priority": by_priority,
+        "by_status": by_status,
+    }
+
+
 @app.get("/tickets/{ticket_id}", response_model=Ticket)
 def get_ticket(ticket_id: int, session: SessionDep) -> Ticket:
     """Devuelve el ticket por id (`404` si no existe)."""

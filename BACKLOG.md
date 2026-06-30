@@ -16,6 +16,7 @@
 | [IT-4.1](#iteración-4) | Frontend · persistencia de filtros en URL | COMPLETADA |
 | [IT-5](#iteración-5) | Nuevas funcionalidades (plazos + ciclo de vida) | COMPLETADA |
 | [IT-6](#iteración-6) | Calidad y entrega | PENDIENTE |
+| [IT-7](#iteración-7) | Estadísticas (GET /tickets/stats) | COMPLETADA |
 
 **Iteración activa:** IT-5 (feat/iteracion-05 · PR #16)
 
@@ -180,6 +181,19 @@ Fallback: `{"category": "question", "priority": "P3", "tags": []}`
 
 ---
 
+## Épica 7 — Estadísticas
+
+### Historia 7.1 — Endpoint GET /tickets/stats
+**Iteración:** IT-7 | **Depende de:** H5.3 (enum Status completo) | **Bloqueada por:** IT-5
+
+- [x] `GET /tickets/stats` en `app/main.py` (declarado antes de `GET /tickets/{id}`)
+- [x] JSON: `total`, `by_category`, `by_priority`, `by_status`
+- [x] Conteos inicializados a 0 para todos los valores de enum (sin KeyError con BD vacía)
+
+**Criterio de aceptación:** `GET /tickets/stats` → 200 JSON con las cuatro claves; `ruff` limpio; tests en verde.
+
+---
+
 ## Dependencias entre iteraciones
 
 ```
@@ -188,6 +202,7 @@ IT-1 (modelos)
         └── IT-3 (API REST)  ←── también depende de IT-1
               └── IT-4 (frontend)
                     └── IT-4.1 (persistencia de filtros en URL)
-                          └── IT-5 (plazos + ciclo de vida)  ← paralelo: feature/plazos-tickets | feature/ciclo-vida-tickets
-                                └── IT-6 (calidad y entrega)
+                          └── IT-5 (plazos + ciclo de vida)
+                                ├── IT-6 (calidad y entrega)
+                                └── IT-7 (estadísticas)  ← paralelo con IT-6
 ```
