@@ -1,3 +1,29 @@
+{# Parcial reutilizable del tablero: tabla con una fila por ticket, o estado
+   vacío. Lo incluye `index.html` (render inicial) y lo devuelven los endpoints
+   `GET /tickets/tablero` y `POST /tickets/crear` (refresco vía HTMX). #}
+{% set category_classes = {
+  "bug": "bg-red-100 text-red-800",
+  "feature_request": "bg-blue-100 text-blue-800",
+  "question": "bg-slate-100 text-slate-700",
+  "urgent": "bg-orange-100 text-orange-800"
+} %}
+{% set priority_classes = {
+  "P1": "bg-red-600 text-white",
+  "P2": "bg-amber-500 text-white",
+  "P3": "bg-emerald-600 text-white"
+} %}
+{% set status_classes = {
+  "open": "bg-slate-100 text-slate-700",
+  "in_progress": "bg-blue-100 text-blue-800",
+  "closed": "bg-emerald-100 text-emerald-800"
+} %}
+
+{% if error %}
+<div class="mb-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-red-200">
+  {{ error }}
+</div>
+{% endif %}
+
 <table class="min-w-full divide-y divide-slate-200 bg-white shadow-sm ring-1 ring-slate-200 rounded-lg overflow-hidden">
   <thead class="bg-slate-100">
     <tr>
@@ -10,7 +36,41 @@
       <th class="px-3 py-2 text-left text-sm font-semibold">Creado</th>
     </tr>
   </thead>
-  <tbody id="tickets-table-body">
-    <!-- TODO: renderizar tickets con Jinja2 -->
+  <tbody id="tickets-table-body" class="divide-y divide-slate-100">
+    {% for ticket in tickets %}
+    <tr>
+      <td class="px-3 py-2 text-sm text-slate-500">{{ ticket.id }}</td>
+      <td class="px-3 py-2 text-sm font-medium">{{ ticket.title }}</td>
+      <td class="px-3 py-2 text-sm">
+        <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {{ category_classes.get(ticket.category.value, 'bg-slate-100 text-slate-700') }}">
+          {{ ticket.category.value }}
+        </span>
+      </td>
+      <td class="px-3 py-2 text-sm">
+        <span class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold {{ priority_classes.get(ticket.priority.value, 'bg-slate-500 text-white') }}">
+          {{ ticket.priority.value }}
+        </span>
+      </td>
+      <td class="px-3 py-2 text-sm">
+        <div class="flex flex-wrap gap-1">
+          {% for tag in ticket.tags %}
+          <span class="inline-block rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </td>
+      <td class="px-3 py-2 text-sm">
+        <span class="inline-block rounded-full px-2 py-0.5 text-xs font-medium {{ status_classes.get(ticket.status.value, 'bg-slate-100 text-slate-700') }}">
+          {{ ticket.status.value }}
+        </span>
+      </td>
+      <td class="px-3 py-2 text-sm text-slate-500">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7" class="px-3 py-6 text-center text-sm text-slate-500">
+        No hay tickets que coincidan
+      </td>
+    </tr>
+    {% endfor %}
   </tbody>
 </table>
